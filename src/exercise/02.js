@@ -18,8 +18,15 @@ function useLocalStorageState(
     },
   )
 
+  const prevKeyRef = React.useRef(key)
+
   React.useEffect(() => {
     console.log('running use effects')
+    const prevKey = prevKeyRef.current
+    if(prevKey !== key) {
+      window.localStorage.removeItem(prevKey)
+    }
+    prevKeyRef.current = key;
     window.localStorage.setItem(key, serialize(state))
   }, [key, state, serialize])
 
@@ -28,7 +35,8 @@ function useLocalStorageState(
 
 function Greeting({initialName = ''}) {
   console.log('renderin greeting')
-  const [name, setName] = useLocalStorageState('name', initialName)
+  const [nameKey, setNameKey] = React.useState('name')
+  const [name, setName] = useLocalStorageState(nameKey, initialName)
   const [countObject, setCountObject] = useLocalStorageState('countObject', {
     count: 0,
     timestamps: [Date.now()],
@@ -36,6 +44,11 @@ function Greeting({initialName = ''}) {
 
   function handleChange(event) {
     setName(event.target.value)
+  }
+
+  function changeKey(event) {
+    event.preventDefault()
+    setNameKey('Name')
   }
 
   function increment(event) {
@@ -50,6 +63,7 @@ function Greeting({initialName = ''}) {
   return (
     <div>
       <form>
+        <button onClick={changeKey}>Change key</button>
         <label htmlFor="name">Name: </label>
         <input value={name} onChange={handleChange} id="name" />
         <button onClick={increment}>{countObject.count}</button>
